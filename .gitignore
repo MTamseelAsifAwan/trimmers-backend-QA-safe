@@ -40,5 +40,5 @@ coverage/
 package-lock.json
 
 # Uploads folder
-uploads/
+/uploads/
 
