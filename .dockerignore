@@ -1,0 +1,27 @@
+# Node.js dependencies
+node_modules
+npm-debug.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# Testing
+coverage
+*.test.js
+
+# Misc
+.DS_Store
+.vscode
+*.log
+*.swp
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore

@@ -1,0 +1,6 @@
+{
+    "Name": "/barber-app/MONGODB_URI",
+    "Value": "mongodb+srv://danyroyal:Barbershop123!@barber-app-dany.pi0cdf9.mongodb.net/barber-app?retryWrites=true&w=majority",
+    "Type": "SecureString",
+    "Overwrite": true
+  }

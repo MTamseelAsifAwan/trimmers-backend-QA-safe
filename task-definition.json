@@ -1,0 +1,43 @@
+{
+    "family": "barber-app",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::593793037450:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+      {
+        "name": "barber-app",
+        "image": "593793037450.dkr.ecr.us-east-2.amazonaws.com/barber-app:latest",
+        "essential": true,
+        "portMappings": [
+          {
+            "containerPort": 5000,
+            "hostPort": 5000,
+            "protocol": "tcp"
+          }
+        ],
+        "environment": [
+          { "name": "NODE_ENV", "value": "production" },
+          { "name": "PORT", "value": "5000" }
+        ],
+        "secrets": [
+          { "name": "MONGODB_URI", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/MONGODB_URI" },
+          { "name": "JWT_SECRET", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/JWT_SECRET" },
+          { "name": "AWS_ACCESS_KEY_ID", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/AWS_ACCESS_KEY_ID" },
+          { "name": "AWS_SECRET_ACCESS_KEY", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/AWS_SECRET_ACCESS_KEY" },
+          { "name": "AWS_REGION", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/AWS_REGION" },
+          { "name": "AWS_S3_BUCKET", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/AWS_S3_BUCKET" },
+          { "name": "STRIPE_SECRET_KEY", "valueFrom": "arn:aws:ssm:us-east-2:593793037450:parameter/barber-app/STRIPE_SECRET_KEY" }
+        ],
+        "logConfiguration": {
+          "logDriver": "awslogs",
+          "options": {
+            "awslogs-group": "/ecs/barber-app",
+            "awslogs-region": "us-east-2",
+            "awslogs-stream-prefix": "ecs"
+          }
+        }
+      }
+    ],
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "256",
+    "memory": "512"
+  }

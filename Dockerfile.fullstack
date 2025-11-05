@@ -1,0 +1,29 @@
+# Build stage for React app
+FROM node:18-alpine as build-stage
+WORKDIR /app/frontend
+COPY ./frontend/package.json ./frontend/yarn.lock ./
+RUN yarn install
+COPY ./frontend .
+# Update the API URL to point to the same origin
+RUN echo "VITE_API_URL = /api" > .env.production
+RUN yarn build
+
+# Final stage with Node.js backend
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy backend code
+COPY . .
+
+# Copy built frontend from previous stage
+COPY --from=build-stage /app/frontend/dist ./public
+
+# Add static file serving to your Express app
+RUN echo "app.use(express.static('public'));" >> server.js
+RUN echo "app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });" >> server.js
+
+EXPOSE 5000
+ENV NODE_ENV=production
+CMD ["node", "server.js"]

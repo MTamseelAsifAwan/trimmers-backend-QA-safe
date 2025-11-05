@@ -1,0 +1,24 @@
+
+# Use official Node.js LTS image as base
+FROM node:18-alpine
+
+# Set working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Set environment to production
+ENV NODE_ENV=production
+
+# Use node directly (not nodemon) for production
+CMD ["node", "server.js"]

@@ -1,0 +1,477 @@
+# Customer Booking Flow (Step-by-Step)
+
+## Step 1: Search Shops by Service & Type
+- Endpoint: GET /api/customers/search-shops
+- Description: Find shops offering a specific service, optionally filtered by type (shopBased or homeBased).
+- Sample Request:
+```
+GET /api/customers/search-shops?serviceId=687e22f33eaaa623bb4b0fc8&type=shopBased&latitude=33.6844&longitude=73.0479
+Authorization: Bearer <customer_token>
+```
+
+## Step 2: View Shop Availability & Slots
+- Endpoint: GET /api/customers/shop-availability/:shopId
+- Description: Get available booking dates and times for all barbers/freelancers in a shop for a specific service.
+- Sample Request:
+```
+GET /api/customers/shop-availability/68a4406708d92217391a1658?serviceId=687e22f33eaaa623bb4b0fc8&date=2025-09-21
+Authorization: Bearer <customer_token>
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "shopId": "68a4406708d92217391a1658",
+  "serviceId": "687e22f33eaaa623bb4b0fc8",
+  "date": "2025-09-21T00:00:00.000Z",
+  "barbers": [
+    {
+      "barberId": "68a4075ba78eeba40dca081c",
+      "barberName": "Saara Ai",
+      "services": [
+        {
+          "serviceId": "687e22f33eaaa623bb4b0fc8",
+          "serviceName": "Men's Haircut",
+          "serviceType": "shopBased",
+          "availableSlots": [ { "hour": 10, "minute": 0 }, ... ]
+        }
+      ],
+      "generalAvailability": [ { "hour": 9, "minute": 0 }, ... ]
+    }
+  ]
+}
+```
+
+## Step 3: Create Booking
+- Endpoint: POST /api/bookings
+- Description: Create a booking for the selected shop, barber, service, date, and time.
+- Sample Request:
+```
+POST /api/bookings
+Content-Type: application/json
+Authorization: Bearer <customer_token>
+{
+  "customerId": "68a5631313ddd6f11e7d68ac",
+  "shopId": "68a4406708d92217391a1658",
+  "serviceId": "687e22f33eaaa623bb4b0fc8",
+  "serviceType": "shopBased",
+  "countryId": "67e6d6f22d52ed9c73cca17f",
+  "barberId": "68a4075ba78eeba40dca081c",
+  "bookingDate": "2025-09-21T00:00:00.000Z",
+  "bookingTime": { "hour": 10, "minute": 0 },
+  "notes": "Please book with freelancer BAXX79391680"
+}
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Booking created successfully",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "pending_approval",
+    ...other booking fields...
+  }
+}
+```
+
+## Step 4: Booking Confirmation & Payment
+- Barber or shop owner confirms/rejects booking (see workflow below)
+- Customer can pay for booking (cash/card endpoints)
+- Customer can view, cancel, or rate bookings
+
+---
+
+# Booking Workflow Guide
+
+## 0. Check Shop Availability & Slots
+- Endpoint: GET /api/customers/shop-availability/:shopId
+- Description: Get available booking dates and times for all barbers/freelancers in a shop for a specific service.
+- Sample Request:
+```
+GET /api/customers/shop-availability/68a4406708d92217391a1658?serviceId=687e22f33eaaa623bb4b0fc8&date=2025-09-21
+Authorization: Bearer <customer_token>
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "shopId": "68a4406708d92217391a1658",
+  "serviceId": "687e22f33eaaa623bb4b0fc8",
+  "date": "2025-09-21T00:00:00.000Z",
+  "barbers": [
+    {
+      "barberId": "68a4075ba78eeba40dca081c",
+      "barberName": "Saara Ai",
+      "services": [
+        {
+          "serviceId": "687e22f33eaaa623bb4b0fc8",
+          "serviceName": "Men's Haircut",
+          "serviceType": "shopBased",
+          "availableSlots": [ { "hour": 10, "minute": 0 }, ... ]
+        }
+      ],
+      "generalAvailability": [ { "hour": 9, "minute": 0 }, ... ]
+    }
+  ]
+}
+```
+
+## 1. Customer Initiates Booking
+- Endpoint: POST /api/bookings
+- Sample Request:
+```
+POST /api/bookings
+Content-Type: application/json
+{
+  "customerId": "68a5631313ddd6f11e7d68ac",
+  "shopId": "68a4406708d92217391a1658",
+  "serviceId": "687e22f33eaaa623bb4b0fc8",
+  "serviceType": "shopBased",
+  "countryId": "67e6d6f22d52ed9c73cca17f",
+  "barberId": "68a4075ba78eeba40dca081c",
+  "bookingDate": "2025-09-21T00:00:00.000Z",
+  "bookingTime": { "hour": 10, "minute": 0 },
+  "notes": "Please book with freelancer BAXX79391680"
+}
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Booking created successfully",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "pending_approval",
+    ...other booking fields...
+  }
+}
+```
+
+## 1a. View Customer Bookings
+- Endpoint: GET /api/customer/bookings
+- Description: Get all bookings for the logged-in customer.
+
+## 1b. View Booking Details
+- Endpoint: GET /api/customer/bookings/:id
+- Description: Get details for a specific booking.
+
+## 1c. Cancel Booking
+- Endpoint: POST /api/customer/bookings/:id/cancel
+- Description: Cancel a booking.
+
+## 1d. Rate Booking
+- Endpoint: POST /api/customer/bookings/:id/rate
+- Description: Rate and review a completed booking.
+
+## 1e. View Available Slots (Direct)
+- Endpoint: GET /api/customer/bookings/available-slots
+- Description: Get available slots for a barber/service/date.
+
+## 1f. Pay for Booking (Cash)
+- Endpoint: POST /api/customer/bookings/:id/pay/cash
+- Description: Mark booking as paid by cash.
+
+## 1g. Pay for Booking (Card)
+- Endpoint: POST /api/customer/bookings/:id/pay/card/intent
+- Description: Initiate card payment for booking.
+- Endpoint: POST /api/customer/bookings/:id/pay/card/confirm
+- Description: Confirm card payment for booking.
+
+## 1h. View Upcoming Bookings
+- Endpoint: GET /api/customer/bookings/upcoming
+- Description: Get upcoming bookings for the customer.
+
+## 1i. View Past Bookings
+- Endpoint: GET /api/customer/bookings/past
+- Description: Get past bookings for the customer.
+
+## 2. Barber or Freelancer Receives Booking
+- Notification sent to assigned professional.
+
+## 3. Barber Confirms or Rejects Booking
+- Endpoint: POST /api/barbers/bookings/:bookingId/respond
+- **Status Requirements:**
+  - Freelancers: Can respond to `assigned` status
+  - Regular Barbers: Can respond to `pending` or `pending_approval` status
+- **Note:** When freelancers reject a booking, only the shop owner is notified (not the customer). Shop owner can then reassign to another freelancer.
+- Sample Request:
+```
+POST /api/barbers/bookings/68ac36c41723ef0cf7276025/respond
+Authorization: Bearer <barber_token>
+Content-Type: application/json
+{
+  "response": "accept"
+}
+```
+- Sample Response (accept):
+```
+{
+  "success": true,
+  "message": "Booking accepted",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "confirmed",
+    ...other booking fields...
+  }
+}
+```
+- Sample Response (reject):
+```
+{
+  "success": true,
+  "message": "Booking rejected",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "rejected",
+    "rejectReason": "Barber unavailable at this time",
+    ...other booking fields...
+  }
+}
+```
+
+## 4. Shop Owner Assigns Booking to Freelancer (if needed)
+- Endpoint: POST /api/shop-owners/bookings/:bookingId/assign
+- Sample Request:
+```
+POST /api/shop-owners/bookings/68ac36c41723ef0cf7276025/assign
+Authorization: Bearer <shop_owner_token>
+Content-Type: application/json
+{
+  "barberId": "<freelancer_id>"
+}
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Booking assigned to barber/freelancer successfully",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "assigned",
+    ...other booking fields...
+  }
+}
+```
+
+## 5. View Requested Bookings (Shop Owner)
+- Endpoint: GET /api/shop-owners/bookings/requested
+- Sample Request:
+```
+GET /api/shop-owners/bookings/requested
+Authorization: Bearer <shop_owner_token>
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Requested bookings retrieved successfully",
+  "data": [
+    { "_id": "...", "status": "pending_approval", ... },
+    ...
+  ]
+}
+```
+
+## 6. View All Bookings (Shop Owner)
+- Endpoint: GET /api/shop-owners/bookings/all?status=confirmed&page=1&limit=10
+- Sample Request:
+```
+GET /api/shop-owners/bookings/all?status=confirmed&page=1&limit=10
+Authorization: Bearer <shop_owner_token>
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Shop bookings retrieved successfully",
+  "data": {
+    "bookings": [ { "_id": "...", "status": "confirmed", ... }, ... ],
+    "pagination": { "total": 20, "page": 1, "limit": 10, "pages": 2 }
+  }
+}
+```
+
+## 7. Booking Status Transitions
+- `pending_approval` → `assigned` (freelancers, after shop owner approval)
+- `pending_approval` → `pending` (regular barbers, after shop owner approval)
+- `assigned` → `confirmed` or `freelancer_rejected` (by freelancer)
+- `pending` → `confirmed` or `rejected` (by regular barber)
+- `freelancer_rejected` → `assigned` (when shop owner reassigns to another barber)
+- `freelancer_rejected` → `rejected` (if shop owner decides not to reassign)
+- `confirmed` → `completed` (after service)
+
+## 8. Completion & Review
+- After service, booking status is updated to `completed`.
+- Customer can rate and review the professional.
+
+## 9. Freelancer Rejection & Reassignment Process
+- When a freelancer rejects a booking, status becomes `freelancer_rejected` (not `rejected`)
+- **Customer is NOT notified** when freelancer rejects (shop owner handles internally)
+- **Shop Owner Options:**
+  - **Reassign:** POST `/api/shop-owners/bookings/:bookingId/reassign-freelancer-rejected`
+    - Assign to another barber associated with the shop
+    - New barber gets notified to accept/reject
+    - Customer gets notified about reassignment
+  - **Final Reject:** Leave as `freelancer_rejected` or manually set to `rejected`
+- **Sample Reassign Request:**
+```
+POST /api/shop-owners/bookings/68ac36c41723ef0cf7276025/reassign-freelancer-rejected
+Authorization: Bearer <shop_owner_token>
+Content-Type: application/json
+{
+  "barberId": "68a4075ba78eeba40dca081c"
+}
+```
+- **Benefits:** Prevents unnecessary customer concern, allows quick reassignment
+
+---
+
+# Barber Booking Management
+
+## Step 1: View All Bookings (with Status Filter)
+- Endpoint: GET /api/barbers/bookings
+- Description: Barbers can view all their bookings, optionally filtered by status.
+- Sample Requests:
+```
+GET /api/barbers/bookings?status=confirmed
+GET /api/barbers/bookings?status=pending_approval
+GET /api/barbers/bookings?status=assigned
+GET /api/barbers/bookings?status=freelancer_rejected
+```
+- Response includes booking details and pagination.
+
+## Step 2: Accept or Reject Booking
+- Endpoint: POST /api/barbers/bookings/:bookingId/respond
+- Description: Accept or reject a booking assignment. If rejecting, a rejectReason is required.
+- **Important:** When freelancers reject a booking, only the shop owner is notified (not the customer). This allows shop owners to reassign without immediately notifying customers.
+- Sample Request (accept):
+```
+POST /api/barbers/bookings/68ac36c41723ef0cf7276025/respond
+Content-Type: application/json
+Authorization: Bearer <barber_token>
+{
+  "response": "accept"
+}
+```
+- Sample Request (reject):
+```
+POST /api/barbers/bookings/68ac36c41723ef0cf7276025/respond
+Content-Type: application/json
+Authorization: Bearer <barber_token>
+{
+  "response": "reject",
+  "rejectReason": "Barber unavailable at this time"
+}
+```
+- Sample Response (accept):
+```
+{
+  "success": true,
+  "message": "Booking accepted successfully",
+  "data": { ...booking data... }
+}
+```
+- Sample Response (reject):
+```
+{
+  "success": true,
+  "message": "Booking rejected successfully",
+  "data": { ...booking data with rejectReason... }
+}
+```
+
+---
+# Booking Rescheduling & Auto-Reschedule Flow (v2.0)
+
+## Rescheduling by Barber/Freelancer
+- Endpoint: POST /api/barbers/bookings/:bookingId/reschedule
+- Description: Barber/freelancer can reschedule a booking, shifting the booking time forward by 30 minutes.
+- Sample Request:
+```
+POST /api/barbers/bookings/68ac36c41723ef0cf7276025/reschedule
+Authorization: Bearer <barber_token>
+Content-Type: application/json
+```
+- Sample Response:
+```
+{
+  "success": true,
+  "message": "Booking rescheduled successfully",
+  "data": {
+    "_id": "68ac36c41723ef0cf7276025",
+    "status": "rescheduled",
+    "bookingDate": "2025-09-21T10:30:00.000Z",
+    ...other booking fields...
+  }
+}
+```
+- **What happens in DB:**
+  - `bookingDate` is shifted +30 minutes
+  - `status` is set to `rescheduled`
+  - `updatedAt` is refreshed
+  - Notifications sent to customer and shop owner
+
+## Rescheduling by Shop Owner
+- Endpoint: POST /api/shop-owners/bookings/:bookingId/reschedule
+- Description: Shop owner can reschedule any booking in their shop, shifting the time by 30 minutes.
+- Sample Request:
+```
+POST /api/shop-owners/bookings/68ac36c41723ef0cf7276025/reschedule
+Authorization: Bearer <shop_owner_token>
+Content-Type: application/json
+```
+- Sample Response: Same as above
+
+## Auto-Rescheduling (Cron Job)
+- **Frequency:** Every 5 minutes
+- **Function:** `autoRescheduleStaleBookings()`
+- **What it does:** Automatically reschedules bookings that haven't been confirmed within 30 minutes
+- **Notifications:** Sends to both customer and barber about the rescheduling
+
+## Auto-Assignment (Cron Job)
+- **Frequency:** Every 5 minutes
+- **Function:** `autoAssignPendingBookings()`
+- **What it does:** Automatically assigns pending shop-based bookings (older than 10 minutes) to available barbers
+- **Notifications:** 
+  - **Barber:** "New Booking Assigned" with booking details
+  - **Customer:** "Booking Update" about assignment
+  - **Shop Owner:** "Booking Auto-Assigned" notification
+- Every 5 minutes, the system checks for bookings in `assigned`, `pending`, or `pending_approval` status that have not been responded to for 30+ minutes.
+- These bookings are automatically rescheduled (+30 min, status: `rescheduled`).
+- Notifications sent to customer and barber.
+
+## After Rescheduling
+- Barber/freelancer gets a new 30-minute window to accept or reject the booking.
+- Accept: status → `confirmed`
+- Reject: status → `rejected` (regular barber) or `freelancer_rejected` (freelancer)
+- The cycle can repeat (manual or auto-reschedule) until booking is accepted, rejected, or cancelled.
+
+## Status Transitions (Updated)
+- `pending_approval` → `assigned` (freelancers, after shop owner approval)
+- `pending_approval` → `pending` (regular barbers, after shop owner approval)
+- `assigned` → `confirmed` or `freelancer_rejected` or `rescheduled`
+- `pending` → `confirmed` or `rejected` or `rescheduled`
+- `rescheduled` → `confirmed` or `rejected` or `freelancer_rejected` (after barber response)
+- `freelancer_rejected` → `assigned` (when shop owner reassigns)
+- `confirmed` → `completed` (after service)
+
+## Notification Logic
+- Customer is notified for: booking creation, confirmation, rejection (regular barber), rescheduling, reassignment, cancellation, completion.
+- Customer is NOT notified for: freelancer rejection (only shop owner is notified).
+- Barber and shop owner are notified for all status changes and rescheduling events.
+
+## Example Flow
+1. Customer books → status: `pending_approval` or `pending`
+2. **Auto-assignment** (after 10 minutes): If shop-based booking is still pending, automatically assign to available barber → status: `assigned`, notifications sent to barber, customer, and shop owner
+3. Shop owner approves → status: `assigned` (if not auto-assigned)
+4. Barber/freelancer can accept, reject, or reschedule
+5. If rescheduled, booking time shifts +30 min, status: `rescheduled`, notifications sent
+6. Barber/freelancer gets new 30-min window to respond
+7. If no response, auto-reschedule triggers (cycle repeats)
+8. If accepted, status: `confirmed`; if rejected, status: `rejected` or `freelancer_rejected`
+9. Shop owner can reassign if freelancer rejects
+10. Booking completes after service
+
+---
+# End of Updated Booking Workflow Guide

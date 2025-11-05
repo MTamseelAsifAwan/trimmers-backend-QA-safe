@@ -1,0 +1,14 @@
+{
+    "cluster": "barber-app-cluster",
+    "serviceName": "barber-app-service_7",
+    "taskDefinition": "barber-app:7",
+    "desiredCount": 1,
+    "launchType": "FARGATE",
+    "networkConfiguration": {
+      "awsvpcConfiguration": {
+        "subnets": ["subnet-036b867d99b9454e6 ", "subnet-01654d3751787a227","subnet-06baa3f9b522b44ab"],
+        "securityGroups": ["sg-0d1801a3db98b917e"],
+        "assignPublicIp": "ENABLED"
+      }
+    }
+  }

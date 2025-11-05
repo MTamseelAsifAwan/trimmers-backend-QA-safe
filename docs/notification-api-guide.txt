@@ -1,0 +1,171 @@
+# Notification Integration Guide for Flutter Developer
+
+This guide explains how to integrate push notifications using FCM with the backend APIs you have implemented. It covers the notification flow, relevant API routes, sample requests/responses, and important notes for mobile integration.
+
+---
+
+## 1. FCM Token Registration
+
+**Route:** `PUT /api/auth/fcm-token`
+
+**Purpose:** Register or update the user's FCM token after login/registration.
+
+**Sample Request:**
+```
+PUT /api/auth/fcm-token
+Headers: Authorization: Bearer <JWT>
+Body (JSON):
+{
+  "fcmToken": "<FCM_TOKEN_STRING>"
+}
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "message": "FCM token updated successfully",
+  "data": { ... }
+}
+```
+
+**Notes:**
+- Call this endpoint after obtaining the FCM token in your Flutter app.
+- The token is stored per user and used for sending push notifications.
+
+---
+
+## 2. Receiving Notifications
+
+- The backend sends push notifications using the FCM token stored for each user.
+- Notifications are sent for events like bookings, payments, system messages, etc.
+- The payload includes `title` and `message` fields.
+
+**No direct API call needed for receiving; handled by FCM.**
+
+---
+
+## 3. Notification Management APIs
+
+### a. Get All Notifications
+**Route:** `GET /api/notifications`
+
+**Sample Request:**
+```
+GET /api/notifications
+Headers: Authorization: Bearer <JWT>
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "...",
+      "title": "...",
+      "message": "...",
+      "isRead": false,
+      ...
+    }
+  ]
+}
+```
+
+### b. Mark Notification as Read
+**Route:** `PATCH /api/notifications/:id/read`
+
+**Sample Request:**
+```
+PATCH /api/notifications/123456/read
+Headers: Authorization: Bearer <JWT>
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "message": "Notification marked as read",
+  "data": { ... }
+}
+```
+
+### c. Mark All Notifications as Read
+**Route:** `PATCH /api/notifications/mark-all-read`
+
+**Sample Request:**
+```
+PATCH /api/notifications/mark-all-read
+Headers: Authorization: Bearer <JWT>
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "message": "X notifications marked as read",
+  "count": X
+}
+```
+
+### d. Delete Notification
+**Route:** `DELETE /api/notifications/:id`
+
+**Sample Request:**
+```
+DELETE /api/notifications/123456
+Headers: Authorization: Bearer <JWT>
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "message": "Notification deleted"
+}
+```
+
+### e. Count Unread Notifications
+**Route:** `GET /api/notifications/unread/count`
+
+**Sample Request:**
+```
+GET /api/notifications/unread/count
+Headers: Authorization: Bearer <JWT>
+```
+
+**Sample Response:**
+```
+{
+  "success": true,
+  "count": X
+}
+```
+
+---
+
+## 4. Important Notes for Flutter Integration
+- Always update the FCM token after login/registration or when the token changes.
+- Listen for FCM messages in the app and display them to the user.
+- Use the notification management APIs to fetch, mark as read, or delete notifications for the user.
+- All notification management routes require authentication (JWT token).
+
+---
+
+## 5. Example Notification Payload (FCM)
+```
+{
+  "notification": {
+    "title": "Booking Confirmed",
+    "body": "Your booking has been confirmed."
+  },
+  "data": {
+    "type": "booking",
+    "bookingId": "..."
+  }
+}
+```
+
+---
+
+For any questions, refer to the backend code or contact the backend developer.
